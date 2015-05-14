@@ -1,2 +1,3 @@
 # Chessmaster
-Kahden pelaajan keskeinen shakkiohjelma. 
+Kahden pelaajan keskeinen shakkiohjelma. Muokkaus.
+
