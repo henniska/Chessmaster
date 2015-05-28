@@ -15,7 +15,7 @@ public class logiikka {
     /* Kirjaimet kuvaavat shakkinappuloita (c/C = kuningas, koska k/K on otettu)
      * Pienet kirjaimet kuvaavat mustia nappuloita ja isot valkoisia 
      */
-
+    
     
     public static String mahdollisetSiirrot() {
         String siirrot = "";
@@ -75,9 +75,45 @@ public class logiikka {
     }
     
     public static String mahdollisetC(int i) {
-        return "";
+
+        String siirrot = "";
+        String syotyNappula = "";
+        int a = i/8;
+        int b = i%8;
+        for (int j = 0; j < 9; j++) {
+            if (j != 4) {
+                
+    /* Tämä käy läpi jokaisen kuninkaan liikkumapaikan (8), j==4 ei lasketa sillä se on kuninkaan tämänhetkinen paikka.
+     * Liikkuminen sallitaan jos paikka on tyhjä tai mustan nappulan hallitsema, eikä kuningas joudu shakkiin.           
+     */         
+                if (((a-1 + j/3) < 0 || (b-1 + j%3) < 0) || ((a-1 + j/3) > 7 || (b-1 + j%3) > 7)) {
+                    continue;
+                }
+
+                String liikkumapaikka = shakkiLauta[a-1 + j/3][b-1 + j%3];
+                char tyhja = ' ';
+                
+                if (Character.isLowerCase(liikkumapaikka.charAt(0)) || tyhja == (liikkumapaikka.charAt(0))) {
+                    syotyNappula = liikkumapaikka;
+                    shakkiLauta[a][b] = " ";
+                    liikkumapaikka = "C";
+                    if (onkoShakissa()) {
+                        siirrot = siirrot + a + b + (a-1 + j/3) + (b-1 + j%3) + syotyNappula;
+                    }
+                    shakkiLauta[a][b] = "C";
+                    liikkumapaikka = syotyNappula;
+                }
+
+            }
+            
+        }
+
+    /* Pitää lisätä linnoittautuminen.
+     */                        
+        return siirrot;
     }
 
-    /* Näin aikaisessa vaiheessa en keksi hyödyllistä testausta
-    */    
+    public static boolean onkoShakissa() {
+        return true;
+    }   
 }
