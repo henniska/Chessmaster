@@ -1,5 +1,6 @@
 
 package shakki.shakkiohjelma.ohjelmalogiikka;
+import java.util.*;
 
 public class Logiikka {
     static String shakkiLauta[][] = {
@@ -16,6 +17,54 @@ public class Logiikka {
      * Pienet kirjaimet kuvaavat mustia nappuloita ja isot valkoisia 
      */
     
+    static int kuninkaanPaikkaIso = 60, kuninkaanPaikkaPieni = 5;
+    
+    public void vaihdaLauta (String[][] uusiLauta) {
+        
+        shakkiLauta = uusiLauta;
+        char kuningas = 'C';
+        kuninkaanPaikkaIso = 0;
+        kuninkaanPaikkaPieni = 0;
+        while (kuningas != shakkiLauta[kuninkaanPaikkaIso/8][kuninkaanPaikkaIso%8].charAt(0)) {kuninkaanPaikkaIso++;}  
+    }
+    
+    
+    public static void teeSiirto (String siirto) {
+        if (siirto.charAt(4)!= 'P') {
+            
+            shakkiLauta[Character.getNumericValue(siirto.charAt(2))][Character.getNumericValue(siirto.charAt(3))]
+                    = shakkiLauta[Character.getNumericValue(siirto.charAt(0))][Character.getNumericValue(siirto.charAt(1))];
+            shakkiLauta[Character.getNumericValue(siirto.charAt(0))][Character.getNumericValue(siirto.charAt(1))] = " ";
+            
+        } else {
+            /* Sotilaan korottaminen
+             */
+            shakkiLauta[1][Character.getNumericValue(siirto.charAt(0))] = " ";
+            shakkiLauta[0][Character.getNumericValue(siirto.charAt(1))] = String.valueOf(siirto.charAt(3));
+           
+        }
+    }
+    
+    public static void otaTakaisinSiirto (String siirto) {
+        if (siirto.charAt(4)!= 'P') {
+            
+            shakkiLauta[Character.getNumericValue(siirto.charAt(0))][Character.getNumericValue(siirto.charAt(1))]
+                    = shakkiLauta[Character.getNumericValue(siirto.charAt(2))][Character.getNumericValue(siirto.charAt(3))];
+            shakkiLauta[Character.getNumericValue(siirto.charAt(2))][Character.getNumericValue(siirto.charAt(3))]
+                    = String.valueOf(siirto.charAt(4));
+            
+        } else {
+            /* Sotilaan korottaminen
+             */
+            shakkiLauta[1][Character.getNumericValue(siirto.charAt(0))] = "P";
+            shakkiLauta[0][Character.getNumericValue(siirto.charAt(1))] = String.valueOf(siirto.charAt(2));
+           
+        }
+    }
+    
+    public static void kaannaLauta () {
+        
+    }
     
     public static String mahdollisetSiirrot() {
         String siirrot = "";
@@ -49,17 +98,149 @@ public class Logiikka {
                 siirrot+= mahdollisetC(i);
                 
             }
-        }
+        }       
         return siirrot;
        
     }
     
     public static String mahdollisetP(int i) {
-        return "";
+        String siirrot = "";
+        String syotyNappula = "";
+        char tyhja = ' ';
+        int a = i/8;
+        int b = i%8;
+        for (int j = -1; j <= 1; j+=2) {
+            /* Syöminen
+             */
+            try {
+                if (Character.isLowerCase(shakkiLauta[a-1][b+j].charAt(0)) && i>=16) {
+                    syotyNappula = shakkiLauta[a-1][b+j];
+                    shakkiLauta[a][b] = " ";
+                    shakkiLauta[a-1][b+j] = "P";
+                    if (onkoKuningasTurvassa()) {
+                        siirrot = siirrot + a + b + (a-1) + (b+j) + syotyNappula;
+                    }
+                    shakkiLauta[a][b] = "P";
+                    shakkiLauta[a-1][b+j] = syotyNappula;
+                }
+                    
+            } catch (Exception e) {}
+            /* Sotilaan korottaminen ja samalla nappulan syöminen
+             */
+            try {
+                if (tyhja == shakkiLauta[a-1][b].charAt(0) && i<16) {
+                    String[] mahdolliset = {"Q", "K", "B", "R"};
+                    for (int w = 0; w < 4; w++) {
+                        syotyNappula = shakkiLauta[a-1][b];
+                        shakkiLauta[a][b] = " ";
+                        shakkiLauta[a-1][b] = mahdolliset[w];
+                        if (onkoKuningasTurvassa()) {
+                            /* Tarvitaan lisää tietoa kuin ennen
+                             * Formaatti on nyt: rivi1, rivi2, syöty nappula, uusi nappula, P niinkuin promootio
+                             */
+                            siirrot = siirrot + b + b + syotyNappula + mahdolliset[w] + "P";
+                        }
+                        shakkiLauta[a][b] = "P";
+                        shakkiLauta[a-1][b] = syotyNappula;
+                    }
+                }
+                    
+            } catch (Exception e) {}
+            /* Sotilaan korottaminen ilman syömistä
+             */        
+            try {
+                if (Character.isLowerCase(shakkiLauta[a-1][b+j].charAt(0)) && i<16) {
+                    String[] mahdolliset = {"Q", "K", "B", "R"};
+                    for (int w = 0; w < 4; w++) {
+                        syotyNappula = shakkiLauta[a-1][b+j];
+                        shakkiLauta[a][b] = " ";
+                        shakkiLauta[a-1][b+j] = mahdolliset[w];
+                        if (onkoKuningasTurvassa()) {
+                            /* Tarvitaan lisää tietoa kuin ennen
+                             * Formaatti on nyt: rivi1, rivi2, syöty nappula, uusi nappula, P niinkuin promootio
+                             */
+                            siirrot = siirrot + b + (b+j) + syotyNappula + mahdolliset[w] + "P";
+                        }
+                        shakkiLauta[a][b] = "P";
+                        shakkiLauta[a-1][b+j] = syotyNappula;
+                    }
+                }
+                    
+            } catch (Exception e) {}
+        }
+        /* Siirtyminen ylöspäin yhden ruudun verran
+         */        
+        try {
+            if (tyhja == shakkiLauta[a-1][b].charAt(0) && i>=16) {
+                syotyNappula = shakkiLauta[a-1][b];
+                shakkiLauta[a][b] = " ";
+                shakkiLauta[a-1][b] = "P";
+                if (onkoKuningasTurvassa()) {
+                    siirrot = siirrot + a + b + (a-1) + b + syotyNappula;
+                }
+                shakkiLauta[a][b] = "P";
+                shakkiLauta[a-1][b] = syotyNappula;
+            }
+
+        } catch (Exception e) {}
+        /* Siirtyminen ylöspäin kahden ruudun verran
+         */        
+        try {
+            if (tyhja == shakkiLauta[a-1][b].charAt(0) && tyhja == shakkiLauta[a-2][b].charAt(0) && i>=48) {
+                syotyNappula = shakkiLauta[a-2][b];
+                shakkiLauta[a][b] = " ";
+                shakkiLauta[a-2][b] = "P";
+                if (onkoKuningasTurvassa()) {
+                    siirrot = siirrot + a + b + (a-2) + b + syotyNappula;
+                }
+                shakkiLauta[a][b] = "P";
+                shakkiLauta[a-2][b] = syotyNappula;
+            }
+
+        } catch (Exception e) {}
+        
+        return siirrot;
     }
     
     public static String mahdollisetK(int i) {
-        return "";
+        String siirrot = "";
+        String syotyNappula = "";
+        int a = i/8;
+        int b = i%8;
+        for (int j = -1; j <= 1; j+=2) {
+            for (int w = -1; w <= 1; w+=2) {
+                try {
+                    char tyhja = ' ';
+                    if (Character.isLowerCase(shakkiLauta[a+j][b+w*2].charAt(0)) || tyhja == shakkiLauta[a+j][b+w*2].charAt(0)) {
+                        syotyNappula = shakkiLauta[a+j][b+w*2];
+                        shakkiLauta[a][b] = " ";
+                        shakkiLauta[a+j][b+w*2] = "K";
+                        if (onkoKuningasTurvassa()) {
+                            siirrot = siirrot + a + b + (a+j) + (b+w*2) + syotyNappula;
+                        }
+                        shakkiLauta[a][b] = "K";
+                        shakkiLauta[a+j][b+w*2] = syotyNappula;
+                    }
+                } catch (Exception e) {}
+                
+                try {
+                    char tyhja = ' ';
+                    if (Character.isLowerCase(shakkiLauta[a+j*2][b+w].charAt(0)) || tyhja == shakkiLauta[a+j*2][b+w].charAt(0)) {
+                        syotyNappula = shakkiLauta[a+j*2][b+w];
+                        shakkiLauta[a][b] = " ";
+                        shakkiLauta[a+j*2][b+w] = "K";
+                        if (onkoKuningasTurvassa()) {
+                            siirrot = siirrot + a + b + (a+j*2) + (b+w) + syotyNappula;
+                        }
+                        shakkiLauta[a][b] = "K";
+                        shakkiLauta[a+j*2][b+w] = syotyNappula;
+                    }
+                } catch (Exception e) {}
+
+            }
+            
+        }
+        return siirrot;
     }
     
     public static String mahdollisetR(int i) {
@@ -87,7 +268,7 @@ public class Logiikka {
                             syotyNappula = shakkiLauta[a+numero*j][b+numero*w];
                             shakkiLauta[a][b] = " ";
                             shakkiLauta[a+numero*j][b+numero*w] = "R";
-                            if (onkoShakissa()) {
+                            if (onkoKuningasTurvassa()) {
                                 siirrot = siirrot + a + b + (a+numero*j) + (b+numero*w) + syotyNappula;
                             }
                             shakkiLauta[a][b] = "R";
@@ -101,7 +282,7 @@ public class Logiikka {
                             syotyNappula = shakkiLauta[a+numero*j][b+numero*w];
                             shakkiLauta[a][b] = " ";
                             shakkiLauta[a+numero*j][b+numero*w] = "R";
-                            if (onkoShakissa()) {
+                            if (onkoKuningasTurvassa()) {
                                 siirrot = siirrot + a + b + (a+numero*j) + (b+numero*w) + syotyNappula;
                             }
                             shakkiLauta[a][b] = "R";
@@ -135,7 +316,7 @@ public class Logiikka {
                         syotyNappula = shakkiLauta[a+numero*j][b+numero*w];
                         shakkiLauta[a][b] = " ";
                         shakkiLauta[a+numero*j][b+numero*w] = "B";
-                        if (onkoShakissa()) {
+                        if (onkoKuningasTurvassa()) {
                             siirrot = siirrot + a + b + (a+numero*j) + (b+numero*w) + syotyNappula;
                         }
                         shakkiLauta[a][b] = "B";
@@ -146,7 +327,7 @@ public class Logiikka {
                         syotyNappula = shakkiLauta[a+numero*j][b+numero*w];
                         shakkiLauta[a][b] = " ";
                         shakkiLauta[a+numero*j][b+numero*w] = "B";
-                        if (onkoShakissa()) {
+                        if (onkoKuningasTurvassa()) {
                             siirrot = siirrot + a + b + (a+numero*j) + (b+numero*w) + syotyNappula;
                         }
                         shakkiLauta[a][b] = "B";
@@ -181,7 +362,7 @@ public class Logiikka {
                             syotyNappula = shakkiLauta[a+numero*j][b+numero*w];
                             shakkiLauta[a][b] = " ";
                             shakkiLauta[a+numero*j][b+numero*w] = "Q";
-                            if (onkoShakissa()) {
+                            if (onkoKuningasTurvassa()) {
                                 siirrot = siirrot + a + b + (a+numero*j) + (b+numero*w) + syotyNappula;
                             }
                             shakkiLauta[a][b] = "Q";
@@ -192,7 +373,7 @@ public class Logiikka {
                             syotyNappula = shakkiLauta[a+numero*j][b+numero*w];
                             shakkiLauta[a][b] = " ";
                             shakkiLauta[a+numero*j][b+numero*w] = "Q";
-                            if (onkoShakissa()) {
+                            if (onkoKuningasTurvassa()) {
                                 siirrot = siirrot + a + b + (a+numero*j) + (b+numero*w) + syotyNappula;
                             }
                             shakkiLauta[a][b] = "Q";
@@ -232,11 +413,14 @@ public class Logiikka {
                     syotyNappula = liikkumapaikka;
                     shakkiLauta[a][b] = " ";
                     shakkiLauta[a-1 + j/3][b-1 + j%3] = "C";
-                    if (onkoShakissa()) {
+                    int kuningasNumero = kuninkaanPaikkaIso;
+                    kuninkaanPaikkaIso = i + (j/3)*8 + j%3 -9;
+                    if (onkoKuningasTurvassa()) {
                         siirrot = siirrot + a + b + (a-1 + j/3) + (b-1 + j%3) + syotyNappula;
                     }
                     shakkiLauta[a][b] = "C";
                     shakkiLauta[a-1 + j/3][b-1 + j%3] = syotyNappula;
+                    kuninkaanPaikkaIso = kuningasNumero;
                 }
 
             }
@@ -248,7 +432,103 @@ public class Logiikka {
         return siirrot;
     }
 
-    public static boolean onkoShakissa() {
+    public static boolean onkoKuningasTurvassa() {
+        int numero = 1;
+        char tyhja = ' ';
+        char lahetti = 'b';
+        char torni = 'r';
+        char ratsu = 'k';
+        char kuningatar = 'q';
+        char sotilas = 'p';
+        char kuningas = 'c';
+        
+        /* Lähetti + Kuningatar
+         */
+        for (int i = -1; i <= 1; i+=2) {
+            for (int j = -1; j <= 1; j+=2) {
+                try {
+                    while (tyhja == shakkiLauta[kuninkaanPaikkaIso/8 + numero*i][kuninkaanPaikkaIso%8 + numero*j].charAt(0)) {numero++;} {
+                        if (lahetti == shakkiLauta[kuninkaanPaikkaIso/8 + numero*i][kuninkaanPaikkaIso%8 + numero*j].charAt(0)) {
+                            return false;
+                        }
+                        if (kuningatar == shakkiLauta[kuninkaanPaikkaIso/8 + numero*i][kuninkaanPaikkaIso%8 + numero*j].charAt(0)) {
+                            return false;
+                        }
+                    }
+                } catch (Exception e) {}
+                numero = 1;
+            }
+        }
+        /* Torni + Kuningatar
+         */
+        for (int i = -1; i <= 1; i+=2) {
+            try {
+                while (tyhja == shakkiLauta[kuninkaanPaikkaIso/8][kuninkaanPaikkaIso%8 + numero*i].charAt(0)) {numero++;} {
+                    if (torni == shakkiLauta[kuninkaanPaikkaIso/8][kuninkaanPaikkaIso%8 + numero*i].charAt(0)) {
+                        return false;
+                    }
+                    if (kuningatar == shakkiLauta[kuninkaanPaikkaIso/8][kuninkaanPaikkaIso%8 + numero*i].charAt(0)) {
+                        return false;
+                    }
+                }
+            } catch (Exception e) {}
+            numero = 1;
+            try {
+                while (tyhja == shakkiLauta[kuninkaanPaikkaIso/8+ numero*i][kuninkaanPaikkaIso%8].charAt(0)) {numero++;} {
+                    if (torni == shakkiLauta[kuninkaanPaikkaIso/8 + numero*i][kuninkaanPaikkaIso%8].charAt(0)) {
+                        return false;
+                    }
+                    if (kuningatar == shakkiLauta[kuninkaanPaikkaIso/8 + numero*i][kuninkaanPaikkaIso%8].charAt(0)) {
+                        return false;
+                    }
+                }
+            } catch (Exception e) {}
+            numero = 1;
+        }
+        /* Ratsu
+         */
+        for (int i = -1; i <= 1; i+=2) {
+            for (int j = -1; j <= 1; j+=2) {
+                try { 
+                    if (ratsu == shakkiLauta[kuninkaanPaikkaIso/8 + i][kuninkaanPaikkaIso%8 + j*2].charAt(0)) {
+                        return false;
+                    }
+                } catch (Exception e) {}
+                try { 
+                    if (ratsu == shakkiLauta[kuninkaanPaikkaIso/8 + i*2][kuninkaanPaikkaIso%8 + j].charAt(0)) {
+                        return false;
+                    }
+                } catch (Exception e) {}
+            }
+        }
+        /* Sotilas
+         */
+        if (kuninkaanPaikkaIso >= 16) {
+            try { 
+                if (sotilas == shakkiLauta[kuninkaanPaikkaIso/8 - 1][kuninkaanPaikkaIso%8 - 1].charAt(0)) {
+                    return false;
+                }
+            } catch (Exception e) {}
+            try { 
+                if (sotilas == shakkiLauta[kuninkaanPaikkaIso/8 - 1][kuninkaanPaikkaIso%8 + 1].charAt(0)) {
+                    return false;
+                }
+            } catch (Exception e) {}
+        }
+        /* Kuningas
+         */
+        for (int i = -1; i <= 1; i++) {
+            for (int j = -1; j <= 1; j++) {
+                if (i!=0 || j!=0) {
+                    try { 
+                        if (kuningas == shakkiLauta[kuninkaanPaikkaIso/8 + i][kuninkaanPaikkaIso%8 + j].charAt(0)) {
+                            return false;
+                        }
+                    } catch (Exception e) {}                   
+                }           
+            }
+        }
+        
         return true;
     }   
 }
