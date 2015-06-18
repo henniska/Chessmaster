@@ -3,7 +3,7 @@ package shakki.shakkiohjelma.ohjelmalogiikka;
 import java.util.*;
 
 public class Logiikka {
-    static String shakkiLauta[][] = {
+    public static String shakkiLauta[][] = {
         {"r", "k", "b", "q", "c", "b", "k", "r"},
         {"p", "p", "p", "p", "p", "p", "p", "p"},
         {" ", " ", " ", " ", " ", " ", " ", " "},
@@ -16,7 +16,9 @@ public class Logiikka {
     /* Kirjaimet kuvaavat shakkinappuloita (c/C = kuningas, koska k/K on otettu)
      * Pienet kirjaimet kuvaavat mustia nappuloita ja isot valkoisia 
      */
-    
+    public static boolean valkoisenVuoro = true;
+   /* Kuninkaanpaikka täytyy tallettaa jotta voidaan tarkastaa onko se turvassa
+    */    
     static int kuninkaanPaikkaIso = 60, kuninkaanPaikkaPieni = 5;
     
     public void vaihdaLauta (String[][] uusiLauta) {
@@ -30,11 +32,17 @@ public class Logiikka {
     
     
     public static void teeSiirto (String siirto) {
+       
         if (siirto.charAt(4)!= 'P') {
-            
+           /* Jos siirron lopussa ei ole 'P' symbolia niin kyseessä ei ole promootio
+            */            
             shakkiLauta[Character.getNumericValue(siirto.charAt(2))][Character.getNumericValue(siirto.charAt(3))]
                     = shakkiLauta[Character.getNumericValue(siirto.charAt(0))][Character.getNumericValue(siirto.charAt(1))];
             shakkiLauta[Character.getNumericValue(siirto.charAt(0))][Character.getNumericValue(siirto.charAt(1))] = " ";
+            char kuningas = 'C';
+            if (kuningas == shakkiLauta[Character.getNumericValue(siirto.charAt(2))][Character.getNumericValue(siirto.charAt(3))].charAt(0)) {
+                kuninkaanPaikkaIso = 8*Character.getNumericValue(siirto.charAt(2)) + Character.getNumericValue(siirto.charAt(3));
+            }
             
         } else {
             /* Sotilaan korottaminen
@@ -43,6 +51,13 @@ public class Logiikka {
             shakkiLauta[0][Character.getNumericValue(siirto.charAt(1))] = String.valueOf(siirto.charAt(3));
            
         }
+        if (Logiikka.valkoisenVuoro) {
+            Logiikka.valkoisenVuoro = false;
+        } else {
+            Logiikka.valkoisenVuoro = true;
+        }
+        Logiikka.kaannaLauta();
+        
     }
     
     public static void otaTakaisinSiirto (String siirto) {
@@ -52,6 +67,10 @@ public class Logiikka {
                     = shakkiLauta[Character.getNumericValue(siirto.charAt(2))][Character.getNumericValue(siirto.charAt(3))];
             shakkiLauta[Character.getNumericValue(siirto.charAt(2))][Character.getNumericValue(siirto.charAt(3))]
                     = String.valueOf(siirto.charAt(4));
+            char kuningas = 'C';
+            if (kuningas == shakkiLauta[Character.getNumericValue(siirto.charAt(0))][Character.getNumericValue(siirto.charAt(1))].charAt(0)) {
+                kuninkaanPaikkaIso = 8*Character.getNumericValue(siirto.charAt(0)) + Character.getNumericValue(siirto.charAt(1));
+            }
             
         } else {
             /* Sotilaan korottaminen
@@ -63,6 +82,27 @@ public class Logiikka {
     }
     
     public static void kaannaLauta () {
+       /* Koodi käy läpi ruudut laudan kulmista alkaen ja vaihtaa nappuloiden paikan ja samalla muuttaa pienaakkoset suuraakkosiin ja suuraakkoset pienaakkosiin
+        */        
+        String vanha;
+        for (int i = 0; i < 32; i++) {
+            int a = i/8;
+            int b = i%8; 
+            if (Character.isUpperCase(shakkiLauta[a][b].charAt(0))) {
+                vanha = shakkiLauta[a][b].toLowerCase();
+            } else {
+                vanha = shakkiLauta[a][b].toUpperCase();
+            }
+            if (Character.isUpperCase(shakkiLauta[7-a][7-b].charAt(0))) {
+                shakkiLauta[a][b] = shakkiLauta[7-a][7-b].toLowerCase();
+            } else {
+                shakkiLauta[a][b] = shakkiLauta[7-a][7-b].toUpperCase();
+            }
+            shakkiLauta[7-a][7-b] = vanha;     
+        }
+        int vanhaKuningas = kuninkaanPaikkaIso;
+        kuninkaanPaikkaIso = 63 - kuninkaanPaikkaPieni;
+        kuninkaanPaikkaPieni = 63 - vanhaKuningas;
         
     }
     
@@ -156,9 +196,7 @@ public class Logiikka {
                         shakkiLauta[a][b] = " ";
                         shakkiLauta[a-1][b+j] = mahdolliset[w];
                         if (onkoKuningasTurvassa()) {
-                            /* Tarvitaan lisää tietoa kuin ennen
-                             * Formaatti on nyt: rivi1, rivi2, syöty nappula, uusi nappula, P niinkuin promootio
-                             */
+                            
                             siirrot = siirrot + b + (b+j) + syotyNappula + mahdolliset[w] + "P";
                         }
                         shakkiLauta[a][b] = "P";
@@ -253,14 +291,14 @@ public class Logiikka {
             for (int w = -1; w <= 1; w++) {
                 if (j == 0 || w == 0) {
                     
-    /* Jos j ja w ovat 0 niin koodi antaa aina vain nappulan aloituspaikan.
-     */ 
+                /* Jos j ja w ovat 0 niin koodi antaa aina vain nappulan aloituspaikan.
+                 */ 
                     if (j == 0 && w == 0) {
                         continue;
                     }
                     
-    /* Try and catch pysäyttävät koodin jos koordinaatit ovat laudan ulkopuolella eli < 0 tai > 7.
-     */               
+                    /* Try and catch pysäyttävät koodin jos koordinaatit ovat laudan ulkopuolella eli < 0 tai > 7.
+                     */               
                     try {
                         
                         char tyhja = ' ';
@@ -276,8 +314,8 @@ public class Logiikka {
                             numero++;
                         }
                         
-    /* Jos while loop on pysähtynyt se tarkoittaa, että koordinaatit ovat joko oman tai vastustajan nappulan kohdalla.
-     */                     
+                        /* Jos while loop on pysähtynyt se tarkoittaa, että koordinaatit ovat joko oman tai vastustajan nappulan kohdalla.
+                         */                     
                         if (Character.isLowerCase(shakkiLauta[a+numero*j][b+numero*w].charAt(0))) {
                             syotyNappula = shakkiLauta[a+numero*j][b+numero*w];
                             shakkiLauta[a][b] = " ";
@@ -354,9 +392,7 @@ public class Logiikka {
             for (int w = -1; w <= 1; w++) {
                 if (j != 0 || w != 0) {
                     try {
-
-        /* On paljon koodin toistoa, jonka voi myöhemmin laittaa erilliseksi metodiksi.
-         */                
+               
                         char tyhja = ' ';
                         while (tyhja == shakkiLauta[a+numero*j][b+numero*w].charAt(0)) {
                             syotyNappula = shakkiLauta[a+numero*j][b+numero*w];
@@ -399,9 +435,9 @@ public class Logiikka {
         for (int j = 0; j < 9; j++) {
             if (j != 4) {
                 
-    /* TÃ¤mÃ¤ kÃ¤y lÃ¤pi jokaisen kuninkaan liikkumapaikan (8), j==4 ei lasketa sillÃ¤ se on kuninkaan tÃ¤mÃ¤nhetkinen paikka.
-     * Liikkuminen sallitaan jos paikka on tyhjÃ¤ tai mustan nappulan hallitsema, eikÃ¤ kuningas joudu shakkiin.           
-     */         
+                /* TÃ¤mÃ¤ kÃ¤y lÃ¤pi jokaisen kuninkaan liikkumapaikan (8), j==4 ei lasketa sillÃ¤ se on kuninkaan tÃ¤mÃ¤nhetkinen paikka.
+                 * Liikkuminen sallitaan jos paikka on tyhjÃ¤ tai mustan nappulan hallitsema, eikÃ¤ kuningas joudu shakkiin.           
+                 */         
                 if (((a-1 + j/3) < 0 || (b-1 + j%3) < 0) || ((a-1 + j/3) > 7 || (b-1 + j%3) > 7)) {
                     continue;
                 }
@@ -426,9 +462,7 @@ public class Logiikka {
             }
             
         }
-
-    /* PitÃ¤Ã¤ lisÃ¤tÃ¤ linnoittautuminen.
-     */                        
+                      
         return siirrot;
     }
 
