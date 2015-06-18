@@ -8,3 +8,7 @@
 
 11.6.2015 6 tuntia Logiikan viimeistelyä ja käyttöliittymän suunnittelua
 
+17.6.2015 5 tuntia Käyttöliittymän tekemiseen
+
+18.6.2015 6 tuntia Projektin viimeistelyyn ja buggien korjailuun
+
